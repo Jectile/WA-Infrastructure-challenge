@@ -1,5 +1,5 @@
-#Author: 
-#Date:
+#Author: Simon Richter
+#Date: February 17th 2026
 #This should be the only file you edit. You are free to look at other files for reference, but do not change them.
 #Below are are two methods which you must implement: euclidean_dist_to_origin and nearest_neighbor as well as the main function beacon handling. 
 #Helper Functions are allowed, but not required. You must not change the imports, the main function signature, or the return value of the main function.
@@ -39,12 +39,20 @@ def now_ms() -> int:
 
 def euclidean_dist_to_origin(pos) -> float:
     # TODO: validate pos is [x,y] of numbers; compute distance
-    return 0.0  # TODO
+    return (pos[0]**2 + pos[1]**2) ** 0.5 
 
 def nearest_neighbor(neighbors: Dict[str, Dict[str, Any]]) -> Optional[Tuple[str, float]]:
     # neighbors[id] -> {"pos":[x,y], "speed": float, "last_ts": int}
     # TODO: iterate neighbors, compute min distance, return (id, dist) or None
-    return None  # TODO
+    if not neighbors: 
+        return None
+
+    nn_id, nn_dict = min(
+	neighbors.items(),
+	key = lambda n: euclidean_dist_to_origin(n[1]["pos"])
+    )
+
+    return nn_id, euclidean_dist_to_origin(nn_dict["pos"])
 
 def main() -> int:
     neighbors: Dict[str, Dict[str, Any]] = {}
@@ -71,11 +79,43 @@ def main() -> int:
             #   neighbors[msg["id"]] = {"pos": msg["pos"], "speed": msg["speed"], "last_ts": msg["ts"]}
             #hint: beacon handling, check each message and store in neighbors, try to cover edge cases
             # try to avoid changing anything in the main function outside this TODO block
+	    
+            keys = {"id", "pos", "speed", "ts"}
+            if not isinstance(msg, dict):
+                continue
 
-            
+            if not keys.issubset(msg.keys()):
+                continue
 
+            veh_id = msg["id"]
+            pos = msg["pos"]
+            speed = msg["speed"]
+            ts = msg["ts"]
+	    
+	    # Validate input with its value's type 	    
+	    
+            if not isinstance(veh_id, str) or not veh_id: 
+                continue
 
+            if (
+                not isinstance(pos, (list, tuple)) or
+                len(pos) != 2 or
+                not all(isinstance(x, (int, float)) for x in pos)
+            ):
+                continue
 
+            if not isinstance(speed, (int, float)):
+                continue
+
+            if not isinstance(ts, int):
+                continue
+
+	    
+            neighbors[veh_id] = {
+                "pos": pos,
+                "speed": float(speed),
+                "last_ts": ts
+            }
             #END of TODO block
             now = now_ms()
             if first_ts is None:
